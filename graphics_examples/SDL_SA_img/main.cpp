@@ -126,10 +126,10 @@ namespace Game
 			for (int j = i + 1; j < num_dungeons; j++)
 			{
 				cout << "Box " << i << endl;
-				cout << "x: " << Rect[i].x << " vs " << "x1: " << Rect[i + 1].x << endl;
-				cout << "y: " << Rect[i].y << " vs " << "y1: " << Rect[i + 1].y << endl;
-				cout << "w: " << Rect[i].w << " vs " << "w1: " << Rect[i + 1].w << endl;
-				cout << "h: " << Rect[i].h << " vs " << "h1: " << Rect[i + 1].h << endl;
+				cout << "x: " << Rect[i].x << " vs " << "x1: " << Rect[j].x << endl;
+				cout << "y: " << Rect[i].y << " vs " << "y1: " << Rect[j].y << endl;
+				cout << "w: " << Rect[i].w << " vs " << "w1: " << Rect[j].w << endl;
+				cout << "h: " << Rect[i].h << " vs " << "h1: " << Rect[j].h << endl;
 				cout << endl;
 
 				//Checking sides of rectangles
