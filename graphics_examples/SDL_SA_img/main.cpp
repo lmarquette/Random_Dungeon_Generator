@@ -100,10 +100,15 @@ namespace Game
 		{
 
 			cout << "Creating" << endl;
-			Game::Rect[i].x = Game::screen_height / 2;
-			Game::Rect[i].y = Game::screen_width / 2;
+			Game::Rect[i].x = (Game::screen_height / 2) + rand() % 200;
+			Game::Rect[i].y = (Game::screen_width / 2) + rand() % 200;
 			Game::Rect[i].w = rand() % 150;
 			Game::Rect[i].h = rand() % 100;
+
+			cout << "x: " << Rect[i].x << endl;
+			cout << "y: " << Rect[i].y << endl;
+			cout << "w: " << Rect[i].w << endl;
+			cout << "h: " << Rect[i].h << endl << endl;
 
 			SDL_SetRenderDrawColor(renderer, rand() % 255, rand() % 255, rand() % 255, 255);
 			SDL_FillRect(screen, &Game::Rect[i], 255);
@@ -118,14 +123,35 @@ namespace Game
 	{
 		for (int i = 0; i < num_dungeons; i++)
 		{
-			if (Rect[i].x <= Rect[i + 1].x + Rect[i + 1].w && Rect[i].y <= Rect[i + 1].y + Rect[i+1].h)
+			for (int j = i + 1; j < num_dungeons; j++)
 			{
-				overlapping_rooms++;
-				cout << overlapping_rooms << endl;
-			}
-			else
-			{
-				overlapping_rooms = 0;
+				cout << "Box " << i << endl;
+				cout << "x: " << Rect[i].x << " vs " << "x1: " << Rect[i + 1].x << endl;
+				cout << "y: " << Rect[i].y << " vs " << "y1: " << Rect[i + 1].y << endl;
+				cout << "w: " << Rect[i].w << " vs " << "w1: " << Rect[i + 1].w << endl;
+				cout << "h: " << Rect[i].h << " vs " << "h1: " << Rect[i + 1].h << endl;
+				cout << endl;
+
+				//Checking sides of rectangles
+				if()
+
+
+
+
+				if (Rect[i].x > (Rect[j].x + Rect[j].w) || Rect[j].x > (Rect[i].x + Rect[i].w))
+				{
+					overlapping_rooms = 0;
+				}
+				//checking above/below
+				if (Rect[i].y < (Rect[j].y + Rect[j].h) || Rect[j].y < (Rect[i].y + Rect[i].h))
+				{
+					overlapping_rooms = 0;
+				}
+				else
+				{
+					overlapping_rooms++;
+					cout << "Overlapping room: " << overlapping_rooms << endl;
+				}
 			}
 		}
 		system("pause");
@@ -133,27 +159,24 @@ namespace Game
 
 	void Push_Rooms()
 	{
-		for (;;)
+		for (int i = 0; i < num_dungeons; i++)
 		{
-			for (int i = 0; i < num_dungeons; i++)
+			if (overlapping_rooms > 0)
 			{
-				if (overlapping_rooms > 0)
-				{
-					Rect[i].x += rand() % 5 + (-5);
-					Rect[i].y += rand() % 5 + (-5);
+				Rect[i].x += rand() % 5 + (-5);
+				Rect[i].y += rand() % 5 + (-5);
 
-					cout << "Updating position: " << Rect[i].x << endl;
+				cout << "Updating position: " << Rect[i].x << endl;
 
-					Count_Overlapping_Rooms();
-					SDL_RenderPresent(renderer);
-				}
-				else
-				{
-					cout << "No overlapping rooms" << endl;
-					break;
-				}
+				Count_Overlapping_Rooms();
+			}
+			else
+			{
+				cout << "No overlapping rooms" << endl;
+				break;
 			}
 		}
+
 	}
 
 }
