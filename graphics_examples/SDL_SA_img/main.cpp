@@ -14,12 +14,12 @@ using namespace std;
 
 #pragma comment(linker,"/subsystem:console")
 
-struct Pixel
+struct Rect
 {
-	unsigned char r, g, b;
+	float x, y, w, h;
 };
 
-int collision(SDL_Rect *a, SDL_Rect *b)
+int collision(Rect *a, Rect *b)
 {
 	if (a->x + a->w < b->x) return 0;
 	if (a->x > b->x + b->w) return 0;
@@ -38,52 +38,93 @@ namespace Game
 	unsigned char *keys = NULL;
 	SDL_Window *window = NULL;
 
-	//SDL_Surface *scratch;//??????????????????????????????????
-	//SDL_Surface *screen;//??????????????????????????????????
+	const int num_dungeons = 10;
+	Rect dungeons[num_dungeons];
 
+	int min_room_size = 5;
+	int max_room_size = 50;
 
-	//int *grid = NULL;//??????????????????????????????????
-	//int *px, *py;//??????????????????????????????????
-	//Pixel *color;//??????????????????????????????????
+	void spawn_Rooms()
+	{
 
+		for (int i = 0; i < num_dungeons; i++)
+		{
 
-	const int num_dungeons = 5;
-	SDL_Rect dungeons[num_dungeons];
-	//int overlapping_rooms = 0;???????????????????????????????????
+			cout << "Creating" << endl;
+			dungeons[i].w = min_room_size + rand() % (max_room_size - min_room_size);
+			dungeons[i].h = min_room_size + rand() % (max_room_size - min_room_size);
+			dungeons[i].x = screen_width / 2.0;
+			dungeons[i].y = screen_height / 2.0;
+		}
 
-
+	}
 
 	void init()
 	{
 		SDL_Init(SDL_INIT_VIDEO);
+		srand(time(0));
 
 		prev_key_state[256];
 		keys = (unsigned char*)SDL_GetKeyboardState(NULL);
 
 		window = SDL_CreateWindow("Random Dungeon Generator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, screen_width, screen_height, SDL_WINDOW_SHOWN);
 
-		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
+		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-
-		//????????????????????????????
-
-		/*scratch = SDL_CreateRGBSurfaceWithFormat(0, screen_width, screen_height, 24, SDL_PIXELFORMAT_RGB24);
-
-		screen = SDL_GetWindowSurface(window);*/
-
-		//grid = (int*)malloc(scratch->w*scratch->h * sizeof(int));//????????????????????
-		//memset(grid, 0, sizeof(int)*scratch->w*scratch->h);//???????????????????????????????
-
-
-		//Clear Screen
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-		SDL_RenderClear(renderer);
+		spawn_Rooms();
 	}
 
+	
+
+	int resolve_Overlapping_Rooms(float dt)
+	{
+		float bump_amount = 0.01;
+		
+		int n_overlapping_rooms = 0;
+		for (int i = 0; i < num_dungeons; i++)
+		{
+			for (int j = i+1; j < num_dungeons; j++)
+			{
+
+				if (collision(&dungeons[i], &dungeons[j]))
+				{
+					n_overlapping_rooms++;
+					float deltaX = (dungeons[j].x + dungeons[j].w*0.5) - (dungeons[i].x + dungeons[i].w*0.5);
+					float deltaY = (dungeons[j].y + dungeons[j].h*0.5) - (dungeons[i].y + dungeons[i].h*0.5);
+					float magnitude = sqrt(deltaX*deltaX + deltaY * deltaY);
+
+					float norm_deltaX = 0.0;
+					float norm_deltaY = 0.0;
+					if (magnitude != 0.0)
+					{
+						norm_deltaX = deltaX / magnitude;
+						norm_deltaY = deltaY / magnitude;
+					}
+
+					dungeons[j].x += norm_deltaX* bump_amount*dt;
+					dungeons[j].y += norm_deltaY* bump_amount*dt;
+
+					dungeons[i].x -= norm_deltaX* bump_amount*dt;
+					dungeons[i].y -= norm_deltaY* bump_amount*dt;
+				}
+			}
+			
+		}
+
+		for (int i = 0; i < num_dungeons; i++)
+		{
+			if (dungeons[i].x < 0) dungeons[i].x = 0;
+			if (dungeons[i].x > screen_width - dungeons[i].w) dungeons[i].x = screen_width - dungeons[i].w;
+			if (dungeons[i].y < 0) dungeons[i].y = 0;
+			if (dungeons[i].y > screen_height - dungeons[i].h) dungeons[i].y = screen_height - dungeons[i].h;
+		}
+	
+		return n_overlapping_rooms;
+	}
 
 	void update()
 	{
-		srand(time(0));
+		
 		memcpy(prev_key_state, keys, 256);
 
 		//consume all window events first
@@ -96,116 +137,45 @@ namespace Game
 			}
 		}
 
-	
+		int n_overlapping = resolve_Overlapping_Rooms(1.0);
+		printf("n_overlapping = %d\n", n_overlapping);
 	}
 
-	void Spawn_Rooms()
+	void draw()
 	{
-		//????????????????????????????????????????????
-		/*
-		SDL_Rect fillrect = { 100,100,100,100 };
-		SDL_SetRenderDrawColor(renderer, 255, 255, 100, 255);
-		SDL_RenderFillRect(renderer, &fillrect);*/
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+		SDL_RenderClear(renderer);
 
-		
 		for (int i = 0; i < num_dungeons; i++)
 		{
-
-			cout << "Creating" << endl;
-			Game::dungeons[i].x = Game::screen_height / 2;
-			Game::dungeons[i].y = Game::screen_width / 2;
-			Game::dungeons[i].w = rand() % 150;
-			Game::dungeons[i].h = rand() % 100;
-
-			//??????????????????????????????????
-			/*SDL_SetRenderDrawColor(renderer, rand() % 255, rand() % 255, rand() % 255, 255);
-			SDL_FillRect(screen, &Game::dungeons[i], 255);
-			SDL_RenderFillRect(renderer, &Game::dungeons[i]);*/
+			SDL_Rect rect;
+			rect.x = dungeons[i].x;
+			rect.y = dungeons[i].y;
+			rect.w = dungeons[i].w;
+			rect.h = dungeons[i].h;
+			SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+			SDL_RenderFillRect(renderer, &rect);
 		}
 
-		//SDL_RenderPresent(renderer);//?????????????????????
-		//system("pause");
-	}
-
-	int Count_Overlapping_Rooms()
-	{
-		int n_overlapping_rooms = 0;
-		for (int i = 0; i < num_dungeons; i++)
-		{
-			for (int j = i + 1; j < num_dungeons; j++)
-			{
-				if (collision(&dungeons[i], &dungeons[j]))
-				{
-					n_overlapping_rooms++;
-					int deltaX = Game::dungeons[j].x - Game::dungeons[i].x;
-					int deltaY = Game::dungeons[j].y - Game::dungeons[i].y;
-					int magnitude = sqrt(deltaX + deltaY);
-
-					int norm_deltaX = deltaX / magnitude;
-					int norm_deltaY = deltaY / magnitude;
-
-					Game::dungeons[j].x = Game::dungeons[j].x + norm_deltaX;
-					Game::dungeons[j].y = Game::dungeons[j].y + norm_deltaY;
-
-					Game::dungeons[i].x = Game::dungeons[i].x - norm_deltaX;
-					Game::dungeons[i].y = Game::dungeons[i].y - norm_deltaY;
-
-					
-				}
-				else
-				{
-					////?????????????????????????????????
-					//overlapping_rooms = 0;
-					
-				}
-			}
-		}
-	
-		return n_overlapping_rooms;
-	}
-
-	void Push_Rooms()
-	{
-		//????????????????????????????????????
-		/*for (;;)
-		{
-			for (int i = 0; i < num_dungeons; i++)
-			{
-				if (overlapping_rooms > 0)
-				{
-					Rect[i].x += rand() % 5 + (-5);
-					Rect[i].y += rand() % 5 + (-5);
-
-					cout << "Updating position: " << Rect[i].x << endl;
-
-					Count_Overlapping_Rooms();
-					SDL_RenderPresent(renderer);
-				}
-				else
-				{
-					cout << "No overlapping rooms" << endl;
-					break;
-				}
-			}
-		}*/
+		SDL_RenderPresent(renderer);
 	}
 
 }
+
+
+
 int main(int argc, char **argv)
 {
 
-
+	
 	Game::init();
 
-	//where is your game loop?????????????????????????????????????????????????
-
-	Game::update();
-
-	Game::Spawn_Rooms();
-	int n_overlapping = Game::Count_Overlapping_Rooms();
-	printf("n_overlapping = %d\n", n_overlapping);
-	Game::Push_Rooms();
-
+	for (;;)
+	{	
+		Game::update();
+		Game::draw();
+	}
+	
 	getchar();
 	return 0;
 }
