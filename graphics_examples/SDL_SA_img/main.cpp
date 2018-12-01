@@ -19,13 +19,28 @@ struct Rect
 	float x, y, w, h;
 };
 
-int collision(Rect *a, Rect *b)
+namespace Utility
 {
-	if (a->x + a->w < b->x) return 0;
-	if (a->x > b->x + b->w) return 0;
-	if (a->y + a->h < b->y) return 0;
-	if (a->y > b->y + b->h) return 0;
-	return 1;
+	int collision(Rect *a, Rect *b)
+	{
+		if (a->x + a->w < b->x) return 0;
+		if (a->x > b->x + b->w) return 0;
+		if (a->y + a->h < b->y) return 0;
+		if (a->y > b->y + b->h) return 0;
+		return 1;
+	}
+
+	void make_Random_Matrix(int **m, int size)
+	{
+		for (int i = 0; i < size; i++)
+		{
+			for (int j = i + 1; j < size; j++)
+			{
+				m[i][j] = rand() % 2;
+				m[j][i] = m[i][j];//u need to mirror it
+			}
+		}
+	}
 }
 
 namespace Game
@@ -40,11 +55,12 @@ namespace Game
 
 	const int num_dungeons = 40;
 	Rect dungeons[num_dungeons];
+	int **connection_matrix = NULL;
 
 	int min_room_size = 10;
 	int max_room_size = 80;
 
-	float matrix[num_dungeons][num_dungeons];
+	
 
 	void spawn_Rooms()
 	{
@@ -73,7 +89,14 @@ namespace Game
 
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
+		connection_matrix = (int**)malloc(sizeof(int*)*num_dungeons);
+		for (int i = 0; i < num_dungeons; i++)
+		{
+			connection_matrix[i] = (int*)malloc(sizeof(int)*num_dungeons);
+		}
+
 		spawn_Rooms();
+		Utility::make_Random_Matrix(connection_matrix, num_dungeons);
 	}
 
 
@@ -89,7 +112,7 @@ namespace Game
 			{
 				Rect irect = { dungeons[i].x - margin, dungeons[i].y - margin,dungeons[i].w + 2.0*margin,dungeons[i].h + 2.0*margin };
 				Rect jrect = { dungeons[j].x - margin, dungeons[j].y - margin,dungeons[j].w + 2.0*margin,dungeons[j].h + 2.0*margin };
-				if (collision(&irect, &jrect))
+				if (Utility::collision(&irect, &jrect))
 				{
 					n_overlapping_rooms++;
 					float deltaX = (dungeons[j].x + dungeons[j].w*0.5) - (dungeons[i].x + dungeons[i].w*0.5);
@@ -125,31 +148,23 @@ namespace Game
 		return n_overlapping_rooms;
 	}
 
-	void drawing_paths()
-	{
-		for (int i = 0; i < num_dungeons; i++)
-		{
-			for(int j = i + 1; j < num_dungeons; j++)
-			{
-				matrix[i][j] = rand() % 1;
-			}		
-		}	
+	
 
+	void draw_Paths()
+	{
 		for (int i = 0; i < num_dungeons; i++)
 		{
 			for (int j = i + 1; j < num_dungeons; j++)
 			{
-				if (matrix[i][j] == 1)
+				if (connection_matrix[i][j] == 1)
 				{
-					SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-					SDL_RenderDrawLine(renderer, (dungeons[i].x + dungeons[i].w*0.5), (dungeons[j].y + dungeons[j].h*0.5),
-						(dungeons[i].x + dungeons[i].w*0.5), (dungeons[j].y + dungeons[j].h*0.5));
+					
+					SDL_RenderDrawLine(renderer, dungeons[i].x + dungeons[i].w*0.5, dungeons[i].y + dungeons[i].h*0.5,
+						dungeons[j].x + dungeons[j].w*0.5, dungeons[j].y + dungeons[j].h*0.5);
 
 				}
 			}
 		}
-
-		SDL_RenderPresent(renderer);
 	}
 
 	void update()
@@ -169,7 +184,7 @@ namespace Game
 
 		int n_overlapping = resolve_Overlapping_Rooms(5.0, 1.0);
 		printf("n_overlapping = %d\n", n_overlapping);
-		Game::drawing_paths();
+		
 	}
 
 	void draw()
@@ -177,6 +192,7 @@ namespace Game
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 		SDL_RenderClear(renderer);
 
+		SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
 		for (int i = 0; i < num_dungeons; i++)
 		{
 			SDL_Rect rect;
@@ -184,9 +200,11 @@ namespace Game
 			rect.y = dungeons[i].y;
 			rect.w = dungeons[i].w;
 			rect.h = dungeons[i].h;
-			SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
 			SDL_RenderFillRect(renderer, &rect);
 		}
+
+		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+		draw_Paths();
 
 		SDL_RenderPresent(renderer);
 	}
