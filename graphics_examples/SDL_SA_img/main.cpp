@@ -133,11 +133,6 @@ namespace Game
 				cout << endl;
 
 				//Checking sides of rectangles
-				if()
-
-
-
-
 				if (Rect[i].x > (Rect[j].x + Rect[j].w) || Rect[j].x > (Rect[i].x + Rect[i].w))
 				{
 					overlapping_rooms = 0;
