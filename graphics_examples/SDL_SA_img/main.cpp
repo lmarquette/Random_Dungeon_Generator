@@ -38,11 +38,11 @@ namespace Game
 	unsigned char *keys = NULL;
 	SDL_Window *window = NULL;
 
-	const int num_dungeons = 10;
+	const int num_dungeons = 40;
 	Rect dungeons[num_dungeons];
 
-	int min_room_size = 5;
-	int max_room_size = 50;
+	int min_room_size = 10;
+	int max_room_size = 80;
 
 	void spawn_Rooms()
 	{
@@ -53,8 +53,8 @@ namespace Game
 			cout << "Creating" << endl;
 			dungeons[i].w = min_room_size + rand() % (max_room_size - min_room_size);
 			dungeons[i].h = min_room_size + rand() % (max_room_size - min_room_size);
-			dungeons[i].x = screen_width / 2.0;
-			dungeons[i].y = screen_height / 2.0;
+			dungeons[i].x = -max_room_size + rand() % max_room_size + screen_width / 2.0;
+			dungeons[i].y = -max_room_size + rand() % max_room_size + screen_height / 2.0;
 		}
 
 	}
@@ -76,22 +76,23 @@ namespace Game
 
 	
 
-	int resolve_Overlapping_Rooms(float dt)
+	int resolve_Overlapping_Rooms(float margin, float dt)
 	{
 		float bump_amount = 0.01;
-		
+
 		int n_overlapping_rooms = 0;
 		for (int i = 0; i < num_dungeons; i++)
 		{
-			for (int j = i+1; j < num_dungeons; j++)
+			for (int j = i + 1; j < num_dungeons; j++)
 			{
-
-				if (collision(&dungeons[i], &dungeons[j]))
+				Rect irect = { dungeons[i].x - margin, dungeons[i].y - margin,dungeons[i].w + 2.0*margin,dungeons[i].h + 2.0*margin };
+				Rect jrect = { dungeons[j].x - margin, dungeons[j].y - margin,dungeons[j].w + 2.0*margin,dungeons[j].h + 2.0*margin };
+				if (collision(&irect, &jrect))
 				{
 					n_overlapping_rooms++;
 					float deltaX = (dungeons[j].x + dungeons[j].w*0.5) - (dungeons[i].x + dungeons[i].w*0.5);
 					float deltaY = (dungeons[j].y + dungeons[j].h*0.5) - (dungeons[i].y + dungeons[i].h*0.5);
-					float magnitude = sqrt(deltaX*deltaX + deltaY * deltaY);
+					float magnitude = sqrt(deltaX * deltaX + deltaY * deltaY);
 
 					float norm_deltaX = 0.0;
 					float norm_deltaY = 0.0;
@@ -101,11 +102,11 @@ namespace Game
 						norm_deltaY = deltaY / magnitude;
 					}
 
-					dungeons[j].x += norm_deltaX* bump_amount*dt;
-					dungeons[j].y += norm_deltaY* bump_amount*dt;
+					dungeons[j].x += norm_deltaX * bump_amount*dt;
+					dungeons[j].y += norm_deltaY * bump_amount*dt;
 
-					dungeons[i].x -= norm_deltaX* bump_amount*dt;
-					dungeons[i].y -= norm_deltaY* bump_amount*dt;
+					dungeons[i].x -= norm_deltaX * bump_amount*dt;
+					dungeons[i].y -= norm_deltaY * bump_amount*dt;
 				}
 			}
 			
@@ -137,7 +138,7 @@ namespace Game
 			}
 		}
 
-		int n_overlapping = resolve_Overlapping_Rooms(1.0);
+		int n_overlapping = resolve_Overlapping_Rooms(5.0, 1.0);
 		printf("n_overlapping = %d\n", n_overlapping);
 	}
 
