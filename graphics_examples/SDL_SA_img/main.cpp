@@ -137,6 +137,19 @@ namespace Game
 				if (collision(&dungeons[i], &dungeons[j]))
 				{
 					n_overlapping_rooms++;
+					int deltaX = Game::dungeons[j].x - Game::dungeons[i].x;
+					int deltaY = Game::dungeons[j].y - Game::dungeons[i].y;
+					int magnitude = sqrt(deltaX + deltaY);
+
+					int norm_deltaX = deltaX / magnitude;
+					int norm_deltaY = deltaY / magnitude;
+
+					Game::dungeons[j].x = Game::dungeons[j].x + norm_deltaX;
+					Game::dungeons[j].y = Game::dungeons[j].y + norm_deltaY;
+
+					Game::dungeons[i].x = Game::dungeons[i].x - norm_deltaX;
+					Game::dungeons[i].y = Game::dungeons[i].y - norm_deltaY;
+
 					
 				}
 				else
