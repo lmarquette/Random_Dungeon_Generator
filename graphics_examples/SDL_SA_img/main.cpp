@@ -44,6 +44,8 @@ namespace Game
 	int min_room_size = 10;
 	int max_room_size = 80;
 
+	float matrix[num_dungeons][num_dungeons];
+
 	void spawn_Rooms()
 	{
 
@@ -74,7 +76,7 @@ namespace Game
 		spawn_Rooms();
 	}
 
-	
+
 
 	int resolve_Overlapping_Rooms(float margin, float dt)
 	{
@@ -109,7 +111,7 @@ namespace Game
 					dungeons[i].y -= norm_deltaY * bump_amount*dt;
 				}
 			}
-			
+
 		}
 
 		for (int i = 0; i < num_dungeons; i++)
@@ -119,8 +121,35 @@ namespace Game
 			if (dungeons[i].y < 0) dungeons[i].y = 0;
 			if (dungeons[i].y > screen_height - dungeons[i].h) dungeons[i].y = screen_height - dungeons[i].h;
 		}
-	
+
 		return n_overlapping_rooms;
+	}
+
+	void drawing_paths()
+	{
+		for (int i = 0; i < num_dungeons; i++)
+		{
+			for(int j = i + 1; j < num_dungeons; j++)
+			{
+				matrix[i][j] = rand() % 1;
+			}		
+		}	
+
+		for (int i = 0; i < num_dungeons; i++)
+		{
+			for (int j = i + 1; j < num_dungeons; j++)
+			{
+				if (matrix[i][j] == 1)
+				{
+					SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+					SDL_RenderDrawLine(renderer, (dungeons[i].x + dungeons[i].w*0.5), (dungeons[j].y + dungeons[j].h*0.5),
+						(dungeons[i].x + dungeons[i].w*0.5), (dungeons[j].y + dungeons[j].h*0.5));
+
+				}
+			}
+		}
+
+		SDL_RenderPresent(renderer);
 	}
 
 	void update()
@@ -140,6 +169,7 @@ namespace Game
 
 		int n_overlapping = resolve_Overlapping_Rooms(5.0, 1.0);
 		printf("n_overlapping = %d\n", n_overlapping);
+		Game::drawing_paths();
 	}
 
 	void draw()
@@ -167,8 +197,6 @@ namespace Game
 
 int main(int argc, char **argv)
 {
-
-	
 	Game::init();
 
 	for (;;)
