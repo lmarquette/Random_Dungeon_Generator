@@ -53,9 +53,10 @@ namespace Game
 	unsigned char *keys = NULL;
 	SDL_Window *window = NULL;
 
-	const int num_dungeons = 40;
+	const int num_dungeons = 5;
 	Rect dungeons[num_dungeons];
 	int **connection_matrix = NULL;
+	int *visited_array = NULL;
 
 	int min_room_size = 10;
 	int max_room_size = 80;
@@ -90,6 +91,8 @@ namespace Game
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
 		connection_matrix = (int**)malloc(sizeof(int*)*num_dungeons);
+		visited_array = (int*)malloc(sizeof(int*)*num_dungeons);
+
 		for (int i = 0; i < num_dungeons; i++)
 		{
 			connection_matrix[i] = (int*)malloc(sizeof(int)*num_dungeons);
@@ -148,7 +151,35 @@ namespace Game
 		return n_overlapping_rooms;
 	}
 
-	
+	void prim()
+	{
+		visited_array[0] = 1;
+		for (;;)
+		{
+			int min_index_i = 0;
+			int min_index_j = 0;
+			float key = DBL_MAX;
+			int count = 0;
+
+			float min_dist = 0;
+			
+
+			for (int i = 0; i < num_dungeons; i++)
+			{
+				if (visited_array[i] == 0) continue;
+				count++;
+
+				for (int j = 0; j < num_dungeons; j++)
+				{
+					if (visited_array[j] == 1) continue;
+					
+					float min_distance = sqrt(pow((dungeons[j].x - dungeons[i].x), 2) + pow((dungeons[j].y - dungeons[i].y), 2));
+
+					
+				}
+			}
+		}
+	}
 
 	void draw_Paths()
 	{
